@@ -5,8 +5,21 @@ import { formDefinitionSchema, fieldSchema, type Field } from "./fields";
 const f = (raw: unknown): Field => fieldSchema.parse(raw);
 
 const fields: Field[] = [
-  f({ id: "name", type: "short_text", label: "Name", required: true, maxLength: 20 }),
-  f({ id: "age", type: "number", label: "Age", min: 0, max: 120, integer: true }),
+  f({
+    id: "name",
+    type: "short_text",
+    label: "Name",
+    required: true,
+    maxLength: 20,
+  }),
+  f({
+    id: "age",
+    type: "number",
+    label: "Age",
+    min: 0,
+    max: 120,
+    integer: true,
+  }),
   f({
     id: "color",
     type: "select",
@@ -38,7 +51,13 @@ const fields: Field[] = [
     ],
   }),
   f({ id: "score", type: "rating", label: "Score" }),
-  f({ id: "when", type: "date", label: "When", min: "2026-01-01", max: "2026-12-31" }),
+  f({
+    id: "when",
+    type: "date",
+    label: "When",
+    min: "2026-01-01",
+    max: "2026-12-31",
+  }),
 ];
 
 const form = compileForm(fields);
@@ -75,7 +94,8 @@ describe("compileForm.validate", () => {
   it("requires a conditional field once its condition is met", () => {
     const res = form.validate({ name: "A", color: "other" });
     expect(res.success).toBe(false);
-    if (!res.success) expect(res.errors.map((e) => e.fieldId)).toEqual(["other_text"]);
+    if (!res.success)
+      expect(res.errors.map((e) => e.fieldId)).toEqual(["other_text"]);
   });
 
   it("treats empty strings and empty arrays as unanswered", () => {
@@ -86,7 +106,8 @@ describe("compileForm.validate", () => {
   it("rejects unknown field ids", () => {
     const res = form.validate({ name: "A", color: "red", hacker: "x" });
     expect(res.success).toBe(false);
-    if (!res.success) expect(res.errors[0]).toMatchObject({ fieldId: "hacker" });
+    if (!res.success)
+      expect(res.errors[0]).toMatchObject({ fieldId: "hacker" });
   });
 
   it("gives specific messages for number problems", () => {
@@ -111,21 +132,39 @@ describe("compileForm.validate", () => {
 
   it("rejects invalid options and bad multi-select counts", () => {
     expect(form.validate({ name: "A", color: "green" }).success).toBe(false);
-    expect(form.validate({ name: "A", color: "red", tags: ["a", "b", "c"] }).success).toBe(false);
-    expect(form.validate({ name: "A", color: "red", tags: ["a", "a"] }).success).toBe(false);
-    expect(form.validate({ name: "A", color: "red", tags: ["zzz"] }).success).toBe(false);
+    expect(
+      form.validate({ name: "A", color: "red", tags: ["a", "b", "c"] }).success,
+    ).toBe(false);
+    expect(
+      form.validate({ name: "A", color: "red", tags: ["a", "a"] }).success,
+    ).toBe(false);
+    expect(
+      form.validate({ name: "A", color: "red", tags: ["zzz"] }).success,
+    ).toBe(false);
   });
 
   it("validates ratings and dates", () => {
-    expect(form.validate({ name: "A", color: "red", score: 6 }).success).toBe(false);
-    expect(form.validate({ name: "A", color: "red", score: 0 }).success).toBe(false);
-    expect(form.validate({ name: "A", color: "red", when: "2026-02-30" }).success).toBe(false);
-    expect(form.validate({ name: "A", color: "red", when: "2025-12-31" }).success).toBe(false);
-    expect(form.validate({ name: "A", color: "red", when: "2026-12-31" }).success).toBe(true);
+    expect(form.validate({ name: "A", color: "red", score: 6 }).success).toBe(
+      false,
+    );
+    expect(form.validate({ name: "A", color: "red", score: 0 }).success).toBe(
+      false,
+    );
+    expect(
+      form.validate({ name: "A", color: "red", when: "2026-02-30" }).success,
+    ).toBe(false);
+    expect(
+      form.validate({ name: "A", color: "red", when: "2025-12-31" }).success,
+    ).toBe(false);
+    expect(
+      form.validate({ name: "A", color: "red", when: "2026-12-31" }).success,
+    ).toBe(true);
   });
 
   it("enforces text max length", () => {
-    expect(form.validate({ name: "x".repeat(21), color: "red" }).success).toBe(false);
+    expect(form.validate({ name: "x".repeat(21), color: "red" }).success).toBe(
+      false,
+    );
   });
 
   it("rejects non-object payloads", () => {
@@ -137,8 +176,19 @@ describe("compileForm.validate", () => {
   it("cascades hiding: a field depending on a hidden field is hidden too", () => {
     const chain = compileForm([
       f({ id: "a", type: "short_text", label: "A" }),
-      f({ id: "b", type: "short_text", label: "B", showIf: { fieldId: "a", op: "answered" } }),
-      f({ id: "c", type: "short_text", label: "C", required: true, showIf: { fieldId: "b", op: "answered" } }),
+      f({
+        id: "b",
+        type: "short_text",
+        label: "B",
+        showIf: { fieldId: "a", op: "answered" },
+      }),
+      f({
+        id: "c",
+        type: "short_text",
+        label: "C",
+        required: true,
+        showIf: { fieldId: "b", op: "answered" },
+      }),
     ]);
     // a is empty -> b hidden -> c hidden (even if the client sends a value for b)
     expect(chain.validate({ b: "sneaky" }).success).toBe(true);
@@ -147,7 +197,9 @@ describe("compileForm.validate", () => {
   });
 
   it("supports a safe custom regex pattern", () => {
-    const f2 = compileForm([f({ id: "zip", type: "short_text", label: "Zip", pattern: "^\\d{4}$" })]);
+    const f2 = compileForm([
+      f({ id: "zip", type: "short_text", label: "Zip", pattern: "^\\d{4}$" }),
+    ]);
     expect(f2.validate({ zip: "4000" }).success).toBe(true);
     expect(f2.validate({ zip: "40a0" }).success).toBe(false);
   });
@@ -155,11 +207,27 @@ describe("compileForm.validate", () => {
 
 describe("evaluateCondition", () => {
   it("handles each operator", () => {
-    expect(evaluateCondition({ fieldId: "x", op: "gt", value: 3 }, { x: 5 })).toBe(true);
-    expect(evaluateCondition({ fieldId: "x", op: "lt", value: 3 }, { x: 5 })).toBe(false);
-    expect(evaluateCondition({ fieldId: "x", op: "in", value: ["a", "b"] }, { x: "b" })).toBe(true);
-    expect(evaluateCondition({ fieldId: "x", op: "eq", value: "a" }, { x: ["a", "b"] })).toBe(true);
-    expect(evaluateCondition({ fieldId: "x", op: "neq", value: "a" }, { x: "b" })).toBe(true);
+    expect(
+      evaluateCondition({ fieldId: "x", op: "gt", value: 3 }, { x: 5 }),
+    ).toBe(true);
+    expect(
+      evaluateCondition({ fieldId: "x", op: "lt", value: 3 }, { x: 5 }),
+    ).toBe(false);
+    expect(
+      evaluateCondition(
+        { fieldId: "x", op: "in", value: ["a", "b"] },
+        { x: "b" },
+      ),
+    ).toBe(true);
+    expect(
+      evaluateCondition(
+        { fieldId: "x", op: "eq", value: "a" },
+        { x: ["a", "b"] },
+      ),
+    ).toBe(true);
+    expect(
+      evaluateCondition({ fieldId: "x", op: "neq", value: "a" }, { x: "b" }),
+    ).toBe(true);
     expect(evaluateCondition({ fieldId: "x", op: "answered" }, {})).toBe(false);
   });
 });
@@ -208,7 +276,12 @@ describe("formDefinitionSchema", () => {
     const forward = formDefinitionSchema.safeParse({
       ...base,
       fields: [
-        { id: "a", type: "short_text", label: "A", showIf: { fieldId: "b", op: "answered" } },
+        {
+          id: "a",
+          type: "short_text",
+          label: "A",
+          showIf: { fieldId: "b", op: "answered" },
+        },
         { id: "b", type: "short_text", label: "B" },
       ],
     });
@@ -232,7 +305,10 @@ describe("formDefinitionSchema", () => {
 
   it("rejects unknown field types", () => {
     expect(
-      formDefinitionSchema.safeParse({ ...base, fields: [{ id: "t", type: "video", label: "T" }] }).success,
+      formDefinitionSchema.safeParse({
+        ...base,
+        fields: [{ id: "t", type: "video", label: "T" }],
+      }).success,
     ).toBe(false);
   });
 });

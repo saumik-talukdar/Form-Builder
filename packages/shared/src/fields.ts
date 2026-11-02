@@ -92,8 +92,14 @@ const dateField = z.object({
   ...baseShape,
   type: z.literal("date"),
   /** ISO dates (YYYY-MM-DD) */
-  min: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  max: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  min: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  max: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
 });
 
 export const fieldSchema = z.discriminatedUnion("type", [
@@ -172,19 +178,49 @@ export const formDefinitionSchema = z
           });
         }
       }
-      if (field.type === "number" && field.min !== undefined && field.max !== undefined && field.min > field.max) {
-        ctx.addIssue({ code: "custom", path: [...path, "min"], message: "min cannot exceed max" });
+      if (
+        field.type === "number" &&
+        field.min !== undefined &&
+        field.max !== undefined &&
+        field.min > field.max
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: [...path, "min"],
+          message: "min cannot exceed max",
+        });
       }
-      if (field.type === "date" && field.min && field.max && field.min > field.max) {
-        ctx.addIssue({ code: "custom", path: [...path, "min"], message: "min cannot exceed max" });
+      if (
+        field.type === "date" &&
+        field.min &&
+        field.max &&
+        field.min > field.max
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: [...path, "min"],
+          message: "min cannot exceed max",
+        });
       }
       if (field.type === "multi_select") {
         const { minSelected, maxSelected, options } = field;
-        if (minSelected !== undefined && maxSelected !== undefined && minSelected > maxSelected) {
-          ctx.addIssue({ code: "custom", path: [...path, "minSelected"], message: "minSelected cannot exceed maxSelected" });
+        if (
+          minSelected !== undefined &&
+          maxSelected !== undefined &&
+          minSelected > maxSelected
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            path: [...path, "minSelected"],
+            message: "minSelected cannot exceed maxSelected",
+          });
         }
         if (minSelected !== undefined && minSelected > options.length) {
-          ctx.addIssue({ code: "custom", path: [...path, "minSelected"], message: "minSelected exceeds the number of options" });
+          ctx.addIssue({
+            code: "custom",
+            path: [...path, "minSelected"],
+            message: "minSelected exceeds the number of options",
+          });
         }
       }
 
@@ -193,7 +229,8 @@ export const formDefinitionSchema = z
         ctx.addIssue({
           code: "custom",
           path: [...path, "showIf", "fieldId"],
-          message: "Its condition must depend on a question that comes before it. Move this question down, or change the condition",
+          message:
+            "Its condition must depend on a question that comes before it. Move this question down, or change the condition",
         });
       }
 

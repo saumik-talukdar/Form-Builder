@@ -46,7 +46,10 @@ function buildFieldSchema(field: Field): z.ZodTypeAny {
       s = s.max(field.maxLength ?? 500);
       if (field.pattern) {
         const re = new RegExp(field.pattern);
-        return s.refine((v) => re.test(v), "Does not match the required format");
+        return s.refine(
+          (v) => re.test(v),
+          "Does not match the required format",
+        );
       }
       return s;
     }
@@ -58,7 +61,10 @@ function buildFieldSchema(field: Field): z.ZodTypeAny {
     case "number": {
       // Only override the type error: a plain string here would also replace the min/max/int messages.
       let n = z
-        .number({ error: (iss) => (iss.code === "invalid_type" ? "Must be a number" : undefined) })
+        .number({
+          error: (iss) =>
+            iss.code === "invalid_type" ? "Must be a number" : undefined,
+        })
         .finite();
       if (field.integer) n = n.int("Must be a whole number");
       if (field.min !== undefined) n = n.min(field.min);
@@ -73,8 +79,14 @@ function buildFieldSchema(field: Field): z.ZodTypeAny {
       const ids = new Set(field.options.map((o) => o.id));
       let a = z
         .array(z.string())
-        .refine((arr) => arr.every((v) => ids.has(v)), "Contains an invalid option")
-        .refine((arr) => new Set(arr).size === arr.length, "Duplicate selections");
+        .refine(
+          (arr) => arr.every((v) => ids.has(v)),
+          "Contains an invalid option",
+        )
+        .refine(
+          (arr) => new Set(arr).size === arr.length,
+          "Duplicate selections",
+        );
       if (field.minSelected !== undefined) {
         const min = field.minSelected;
         a = a.refine((arr) => arr.length >= min, `Select at least ${min}`);
@@ -92,14 +104,23 @@ function buildFieldSchema(field: Field): z.ZodTypeAny {
       return z
         .string()
         .refine(isValidIsoDate, "Must be a valid date (YYYY-MM-DD)")
-        .refine((v) => min === undefined || v >= min, `Must be on or after ${min}`)
-        .refine((v) => max === undefined || v <= max, `Must be on or before ${max}`);
+        .refine(
+          (v) => min === undefined || v >= min,
+          `Must be on or after ${min}`,
+        )
+        .refine(
+          (v) => max === undefined || v <= max,
+          `Must be on or before ${max}`,
+        );
     }
   }
 }
 
 /** Evaluates a showIf condition against the raw (client-sent) answers. */
-export function evaluateCondition(cond: Condition, answers: Record<string, unknown>): boolean {
+export function evaluateCondition(
+  cond: Condition,
+  answers: Record<string, unknown>,
+): boolean {
   const actual = answers[cond.fieldId];
   switch (cond.op) {
     case "answered":
@@ -120,9 +141,17 @@ export function evaluateCondition(cond: Condition, answers: Record<string, unkno
           : (cond.value as unknown[]).includes(actual))
       );
     case "gt":
-      return typeof actual === "number" && typeof cond.value === "number" && actual > cond.value;
+      return (
+        typeof actual === "number" &&
+        typeof cond.value === "number" &&
+        actual > cond.value
+      );
     case "lt":
-      return typeof actual === "number" && typeof cond.value === "number" && actual < cond.value;
+      return (
+        typeof actual === "number" &&
+        typeof cond.value === "number" &&
+        actual < cond.value
+      );
   }
 }
 
@@ -131,10 +160,16 @@ export function evaluateCondition(cond: Condition, answers: Record<string, unkno
  * depends on a hidden field is hidden too, so hiding cascades. The server and
  * the browser both use this, so what the form shows is what gets validated.
  */
-export function visibleFieldIds(fields: Field[], input: Record<string, unknown>): Set<string> {
+export function visibleFieldIds(
+  fields: Field[],
+  input: Record<string, unknown>,
+): Set<string> {
   const visible = new Set<string>();
   for (const f of fields) {
-    if (!f.showIf || (visible.has(f.showIf.fieldId) && evaluateCondition(f.showIf, input))) {
+    if (
+      !f.showIf ||
+      (visible.has(f.showIf.fieldId) && evaluateCondition(f.showIf, input))
+    ) {
       visible.add(f.id);
     }
   }
@@ -142,20 +177,27 @@ export function visibleFieldIds(fields: Field[], input: Record<string, unknown>)
 }
 
 export function compileForm(fields: Field[]): CompiledForm {
-  const compiled = fields.map((field) => ({ field, schema: buildFieldSchema(field) }));
+  const compiled = fields.map((field) => ({
+    field,
+    schema: buildFieldSchema(field),
+  }));
   const knownIds = new Set(fields.map((f) => f.id));
 
   return {
     validate(raw: unknown): ValidationResult {
       if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
-        return { success: false, errors: [{ fieldId: "_root", message: "Answers must be an object" }] };
+        return {
+          success: false,
+          errors: [{ fieldId: "_root", message: "Answers must be an object" }],
+        };
       }
       const input = raw as Record<string, unknown>;
       const errors: AnswerError[] = [];
       const data: Answers = {};
 
       for (const key of Object.keys(input)) {
-        if (!knownIds.has(key)) errors.push({ fieldId: key, message: "Unknown field" });
+        if (!knownIds.has(key))
+          errors.push({ fieldId: key, message: "Unknown field" });
       }
 
       // Visibility is decided from what the respondent sent, in field order.
@@ -166,7 +208,11 @@ export function compileForm(fields: Field[]): CompiledForm {
 
         const value = input[field.id];
         if (isAbsent(value)) {
-          if (field.required) errors.push({ fieldId: field.id, message: "This field is required" });
+          if (field.required)
+            errors.push({
+              fieldId: field.id,
+              message: "This field is required",
+            });
           continue;
         }
 
@@ -181,7 +227,9 @@ export function compileForm(fields: Field[]): CompiledForm {
         }
       }
 
-      return errors.length > 0 ? { success: false, errors } : { success: true, data };
+      return errors.length > 0
+        ? { success: false, errors }
+        : { success: true, data };
     },
   };
 }
