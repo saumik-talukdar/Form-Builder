@@ -1,0 +1,21 @@
+{
+  "name": "form-builder",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w @fb/api",
+    "dev:web": "npm run dev -w @fb/web",
+    "build:web": "npm run build -w @fb/web",
+    "seed": "npm run seed -w @fb/api --",
+    "explain": "npm run explain -w @fb/api --",
+    "test": "npm run test -w @fb/shared && npm run test -w @fb/api && npm run test -w @fb/web",
+    "typecheck": "npm run typecheck -w @fb/shared && npm run typecheck -w @fb/api && npm run typecheck -w @fb/web"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
