@@ -2,6 +2,17 @@
 
 A form and survey platform. Owners sign in to build and publish forms; respondents are anonymous. TypeScript throughout: Express 5, Mongoose and Zod on the server, React on the client, in an npm-workspaces monorepo.
 
+## 🌐 Live Demo
+
+Try Tallymark here:
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge)](https://tallymark-wtzk.onrender.com)
+
+
+**[https://tallymark-wtzk.onrender.com](https://tallymark-wtzk.onrender.com)**
+
+> The application is deployed on Render. The free instance may take a little time to start after a period of inactivity.
+
+
 ```
 packages/shared   Zod field definitions + schema compiler, used by the API and the browser
 apps/api          Express + Mongoose + Socket.IO
