@@ -2,6 +2,9 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 import { config } from "./config";
 import { errorHandler, notFound } from "./lib/errors";
 import { authRouter } from "./routes/auth";
@@ -32,6 +35,29 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/forms", formsRouter);
   app.use("/api/public", publicRouter);
+
+  if (config.NODE_ENV === "production") {
+    const currentDir = path.dirname(fileURLToPath(import.meta.url));
+
+    const webDistPath = path.resolve(currentDir, "../../web/dist");
+
+    if (existsSync(webDistPath)) {
+      app.use(express.static(webDistPath));
+
+      // React Router fallback
+      app.get(/.*/, (req, res, next) => {
+        if (
+          req.path.startsWith("/api/") ||
+          req.path === "/api" ||
+          req.path.startsWith("/socket.io")
+        ) {
+          return next();
+        }
+
+        res.sendFile(path.join(webDistPath, "index.html"));
+      });
+    }
+  }
 
   app.use("/api", () => {
     throw notFound("Route not found");

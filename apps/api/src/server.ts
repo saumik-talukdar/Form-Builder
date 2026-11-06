@@ -26,8 +26,8 @@ async function main() {
       Boolean(await Form.exists({ _id: formId, ownerId: userId })),
   });
 
-  server.listen(config.PORT, () => {
-    console.log(`API listening on http://localhost:${config.PORT}`);
+  server.listen(config.PORT, "0.0.0.0", () => {
+    console.log(`API listening on port ${config.PORT}`);
   });
 
   const shutdown = (signal: string) => {

@@ -1,28 +1,21 @@
-# Matches apps/api/.env.example (mongodb://127.0.0.1:27019/form-builder).
 services:
-  mongo:
-    image: mongo:7
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "127.0.0.1:27019:27017"
-    volumes:
-      - mongo-data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  redis:
-    image: redis:7
-    ports:
-      - "127.0.0.1:6380:6379"
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-volumes:
-  mongo-data:
-  redis-data:
+      - "10000:10000"
+    environment:
+      NODE_ENV: production
+      PORT: 10000
+
+      MONGODB_URI: ${MONGODB_URI}
+      REDIS_URL: ${REDIS_URL}
+
+      JWT_SECRET: ${JWT_SECRET}
+      IP_HASH_SECRET: ${IP_HASH_SECRET}
+
+      CORS_ORIGIN: http://localhost:10000
+      TRUST_PROXY: "0"
+
+    restart: unless-stopped
